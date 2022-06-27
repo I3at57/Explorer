@@ -3,6 +3,8 @@ from tkinter import filedialog, Text # Dialog with the file system
 import os # to control the po
 import json
 
+from setuptools import Command
+
 root = tk.Tk()  # Main root widget
 apps = []  # List of of open files/exec by string path
 
@@ -13,7 +15,7 @@ print(json_data)
 
 #######################################################################
 
-# Function to add app
+# Function to add app to the list
 def addApp():
     global apps # Get the list in global var
 
@@ -57,16 +59,33 @@ def clearApps():
     for app in apps:
         apps.clear()
 
-def saveFiles():
-    global apps
-
-    inp = textInput.get(1.0, "end-1c")
+def getUserInput(master, input):
+    inp = input.get(1.0, "end-1c")
     with open('saves/' + inp + '.txt', 'w') as f:
         for app in apps:
             f.write(app + ',')
 
+    master.destroy()
+
+# Save the current config
+def saveConfig():
+    global apps
+
+    f = filedialog.asksaveasfile(
+        initialfile='Untitled.txt',
+        defaultextension=".txt",
+        filetypes=[("Text Documents", "*.txt"), ("All Files", "*.*")],
+        initialdir="/./projet/explorer/saves"
+    )
+
+    print(f.name)
+
+    with open(f.name, 'w') as f:
+        for app in apps:
+            f.write(app + ',')
+
 # open config
-def openFiles():
+def openConfig():
     global apps
 
     for widget in appListFrame.winfo_children():
@@ -104,58 +123,53 @@ appListFrame = tk.Frame(
 )
 
 # Frame for the button on top of the app
-topBarFrame = tk.Frame(root)
+menuBar = tk.Menu(root)
 
-openFile = tk.Button(
-    topBarFrame, text="Open File", padx=10,
-    pady=5, fg="white", bg=json_data["button-color"], command=addApp
-)
+# Menu widget for the menu bar
+menuBar = tk.Menu(root)
+fileMenu = tk.Menu(menuBar, tearoff=0)   # Sub Menu File
+menuBar.add_cascade(label="File", menu=fileMenu)
+devMenu = tk.Menu(menuBar, tearoff=0)    # Sub Menu Edit
+menuBar.add_cascade(label="Dev", menu=devMenu)
+helpMenu = tk.Menu(menuBar, tearoff=0)   # Sub Menu Edit
+menuBar.add_cascade(label="Help", menu=helpMenu)
 
-runApp = tk.Button(
-    topBarFrame, text="Run Apps", padx=10,
-    pady=5, fg="white", bg=json_data["button-color"], command=runApps
-)
-
-clearApp = tk.Button(
-    topBarFrame, text="Clear Apps", padx=10, pady=5,
-    fg="white", bg=json_data["button-color"], command=clearApps
-)
-
-saveConfig = tk.Button(
-    topBarFrame, text="Save Configuration", padx=10, pady=5,
-    fg="white", bg=json_data["button-color"], command=saveFiles
-)
-
-openConfig = tk.Button(
-    topBarFrame, text="Open Configuration", padx=10,
-    pady=5, fg="white", bg=json_data["button-color"], command=openFiles
-)
-
-# Create the text inputs
-textInput = tk.Text(topBarFrame, height=1, width=25)
+# Sous menu Fil
+fileMenu.add_command(label="Open File...", command=addApp)
+fileMenu.add_command(label="Open Config...", command=openConfig)
+fileMenu.add_command(label="Clear List", command=clearApps)
+fileMenu.add_command(label="Save config...", command=saveConfig)
+fileMenu.add_command(label="Run App", command=runApps)
+fileMenu.add_command(label="Quit", command=root.destroy)
+# Sous menu edit
+helpMenu.add_command(label="Help")
+helpMenu.add_command(label="?")
+# Sous menu Dev
+devMenu.add_command(label="Test")
 
 #######################################################################
 
-# Run once at launch to create the gui
+def init_menu_bar():
+
+    root.config(menu=menuBar)
+
 def init_widgets():
 
-    topBarFrame.pack(side="top")
-    appListFrame.pack(side="top")
-    openFile.pack(side="left")
-    runApp.pack(side="left")
-    clearApp.pack(side="left")
-    saveConfig.pack(side="left")
-    textInput.pack(side="left")
-    openConfig.pack(side="left")
-    appListFrame.pack(side="top")
+    appListFrame.pack(side="top", fill="both", expand=True)
 
-    root.resizable(0, 0)
+    root.geometry("500x500")
     root.title("Explorer")
+
+# Run all function to build the app
+def init():
+
+    init_widgets()
+    init_menu_bar()
 
 
 #######################################################################
 
 if __name__ == '__main__':
 
-    init_widgets()
+    init()
     root.mainloop()
